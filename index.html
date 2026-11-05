@@ -192,6 +192,11 @@ textarea.input{resize:vertical;min-height:110px}
 .list-edit button{border:0;background:var(--sunk);border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:14px;line-height:1;color:var(--muted)}
 .note{font-size:12.5px;color:var(--muted)}
 
+.due-card{background:var(--surface);border:1px solid var(--pink);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 0 18px rgb(255 79 216 / .22)}
+.due-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;background:var(--sunk);border:0;border-radius:10px;padding:9px 11px;font-size:14px}
+.due-row span{min-width:0;overflow-wrap:anywhere}
+.due-row i{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:99px}
+.w-overdue i{background:var(--out-soft);color:var(--out)} .w-today i{background:var(--wait-soft);color:var(--wait)} .w-tomorrow i{background:var(--accent-soft);color:var(--accent)}
 .toast{position:fixed;z-index:60;left:50%;transform:translateX(-50%);bottom:calc(150px + env(safe-area-inset-bottom,0px));background:var(--accent);color:var(--accent-ink);padding:10px 16px;border-radius:12px;font-size:14px;font-weight:500;max-width:calc(100% - 32px)}
 @media (prefers-reduced-motion:no-preference){
   .sheet{animation:up .22s ease-out}
@@ -266,7 +271,7 @@ function loadLocal(){
   try{ const raw = localStorage.getItem(LKEY); if(raw){ const d = JSON.parse(raw);
     S.entries = d.entries||[]; S.settings = Object.assign(S.settings, d.settings||{}); } }catch(e){}
 }
-function persistLocal(){ try{ localStorage.setItem(LKEY, JSON.stringify({entries:S.entries, settings:S.settings})); }catch(e){ toast('Phone storage is full. Export a backup and delete old entries.'); } }
+function persistLocal(){ syncDueCache(); try{ localStorage.setItem(LKEY, JSON.stringify({entries:S.entries, settings:S.settings})); }catch(e){ toast('Phone storage is full. Export a backup and delete old entries.'); } }
 
 async function initStore(){
   S.mode = 'local';
@@ -274,6 +279,86 @@ async function initStore(){
   try{ if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); }catch(e){}
   render();
   handleSharedText();
+  syncDueCache();
+  notifyDueOnOpen();
+}
+/* ---------- reminders ---------- */
+const DAY = 86400000;
+function addDays(iso, n){ const [y,m,d] = iso.split('-').map(Number); const t = new Date(y,m-1,d+n); return t.getFullYear()+'-'+pad(t.getMonth()+1)+'-'+pad(t.getDate()); }
+function dueList(){
+  const t = todayISO(), tomorrow = addDays(t,1);
+  return S.entries.filter(e => (e.type==='lent'||e.type==='borrowed') && e.due && (e.status||'pending')!=='cleared' && e.due<=tomorrow)
+    .map(e => ({id:e.id, type:e.type, who:e.person||e.title||'Someone', amount:e.amount, due:e.due,
+      when: e.due<t ? 'overdue' : e.due===t ? 'today' : 'tomorrow'}))
+    .sort((a,b)=>a.due.localeCompare(b.due));
+}
+function dueText(d){
+  const amt = CUR+' '+fmt(d.amount);
+  const when = d.when==='overdue' ? 'was due '+dayLabel(d.due) : 'is due '+d.when;
+  return d.type==='lent' ? `${d.who} owes you ${amt} — ${when}` : `You owe ${d.who} ${amt} — ${when}`;
+}
+async function syncDueCache(){
+  // The background checker can't read app storage, so keep a copy of open due dates in the offline cache.
+  try{
+    if (!('caches' in window)) return;
+    const items = S.entries.filter(e => (e.type==='lent'||e.type==='borrowed') && e.due && (e.status||'pending')!=='cleared')
+      .map(e => ({id:e.id, type:e.type, who:e.person||e.title||'Someone', amount:e.amount, due:e.due}));
+    const c = await caches.open('dinar-reminders'); await c.put('./due.json', new Response(JSON.stringify(items), {headers:{'content-type':'application/json'}}));
+  }catch(e){}
+}
+async function notifyDueOnOpen(){
+  try{
+    if (!('Notification' in window) || Notification.permission!=='granted') return;
+    const due = dueList().filter(d => d.when!=='tomorrow'); if (!due.length) return;
+    const key = 'dinar-notified', t = todayISO();
+    let last = ''; try{ last = localStorage.getItem(key)||''; }catch(e){}
+    if (last===t) return;
+    const reg = await navigator.serviceWorker.ready;
+    await reg.showNotification(due.length===1 ? 'Payment due' : due.length+' payments due', {
+      body: due.slice(0,3).map(dueText).join('\n') + (due.length>3 ? `\n+${due.length-3} more` : ''),
+      icon:'icon-192.png?v=2', badge:'icon-192.png?v=2', tag:'dinar-due' });
+    try{ localStorage.setItem(key, t); }catch(e){}
+  }catch(e){}
+}
+async function remindersState(){
+  if (!('Notification' in window) || !('serviceWorker' in navigator)) return 'unsupported';
+  return Notification.permission; // granted | denied | default
+}
+async function enableReminders(){
+  try{
+    const p = await Notification.requestPermission();
+    if (p!=='granted'){ toast(p==='denied' ? 'Notifications are blocked. Allow them in Settings → Apps → Dinar Ledger → Notifications.' : 'Reminders not turned on'); renderSheet(); return; }
+    const reg = await navigator.serviceWorker.ready;
+    let bg = false;
+    try{
+      if ('periodicSync' in reg){
+        const st = await navigator.permissions.query({name:'periodic-background-sync'});
+        if (st.state==='granted'){ await reg.periodicSync.register('dinar-due-check', {minInterval: 12*60*60*1000}); bg = true; }
+      }
+    }catch(e){}
+    try{ localStorage.setItem('dinar-bg-sync', bg?'1':'0'); }catch(e){}
+    await syncDueCache();
+    toast(bg ? 'Reminders on, including daily background checks' : 'Reminders on. You\'ll be alerted when you open the app');
+    try{ localStorage.removeItem('dinar-notified'); }catch(e){}
+    notifyDueOnOpen(); renderSheet();
+  }catch(e){ toast("Couldn't turn on reminders on this phone."); }
+}
+function icsFor(e){
+  const [y,m,d] = e.due.split('-'); const dt = y+m+d;
+  const nd = addDays(e.due,1).replace(/-/g,'');
+  const who = (e.person||e.title||'Someone').replace(/[,;\\]/g,' ');
+  const summary = e.type==='lent' ? `Collect ${CUR} ${fmt(e.amount)} from ${who}` : `Pay ${CUR} ${fmt(e.amount)} to ${who}`;
+  const stamp = new Date().toISOString().replace(/[-:]/g,'').replace(/\.\d+/,'');
+  return ['BEGIN:VCALENDAR','VERSION:2.0','PRODID:-//Dinar Ledger//EN','CALSCALE:GREGORIAN','METHOD:PUBLISH','BEGIN:VEVENT',
+    'UID:'+e.id+'@dinar-ledger','DTSTAMP:'+stamp,'DTSTART;VALUE=DATE:'+dt,'DTEND;VALUE=DATE:'+nd,
+    'SUMMARY:'+summary, 'DESCRIPTION:Dinar Ledger reminder'+(e.note?' - '+e.note.replace(/[,;\\\n]/g,' '):''),
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+summary,'TRIGGER;RELATED=START:PT9H','END:VALARM',
+    'BEGIN:VALARM','ACTION:DISPLAY','DESCRIPTION:'+summary,'TRIGGER;RELATED=START:-PT15H','END:VALARM',
+    'END:VEVENT','END:VCALENDAR'].join('\r\n');
+}
+function downloadFile(name, text, type){
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text],{type})); a.download = name;
+  document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1500);
 }
 function handleSharedText(){
   try{
@@ -397,6 +482,9 @@ function renderHome(){
       <div><small>${left<0?'Over by':'Left'}</small><span class="num">${hasAvail? fmt(Math.abs(left)) : '—'}</span></div>
       <div><small>Income</small><span class="num">${fmt(income)}</span></div>
     </div></section>`;
+  const due = dueList();
+  if (due.length) html += `<section class="due-card" aria-label="Due payments"><div class="section-head"><h2>Due soon</h2><span class="label">${due.length}</span></div>
+    ${due.map(d=>`<button class="due-row w-${d.when}" data-act="edit" data-id="${esc(d.id)}"><span>${esc(dueText(d))}</span><i>${d.when==='overdue'?'Overdue':d.when==='today'?'Today':'Tomorrow'}</i></button>`).join('')}</section>`;
   html += `<div class="tiles">
     <button class="tile recv" data-act="goto-owed" data-v="receivable"><span class="label">Receivable</span><span class="num">${fmt(r.pending)}</span><small>${r.count} pending${r.paid?` · ${fmt(r.paid)} paid, not cleared`:''}</small></button>
     <button class="tile pay" data-act="goto-owed" data-v="payable"><span class="label">Payable</span><span class="num">${fmt(p.pending)}</span><small>${p.count} pending${p.paid?` · ${fmt(p.paid)} paid, not cleared`:''}</small></button></div>`;
@@ -410,7 +498,7 @@ function renderHome(){
     const recent = me.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.createdAt||0)-(a.createdAt||0)).slice(0,5);
     html += `<section class="section"><div class="section-head"><h2>Recent</h2><button class="link" data-act="tab" data-v="activity">See all</button></div><div class="list">${recent.map(itemHTML).join('')}</div></section>`;
   }
-  html += `<div class="section-head"><span class="note">Saved on this phone. Export a backup now and then.</span><button class="link" data-act="open-lists">Settings &amp; backup</button></div>`;
+  html += `<div class="section-head"><span class="note">Saved on this phone. Export a backup now and then.</span><button class="link" data-act="open-lists">Settings, reminders &amp; backup</button></div>`;
   view.innerHTML = html;
 }
 function renderActivity(){
@@ -492,6 +580,12 @@ function renderSheet(){
     sheetEl.innerHTML = `<div class="grab"></div><div class="sheet-head"><h2 id="sheet-title">Categories &amp; buckets</h2><button class="btn ghost" data-act="close">Done</button></div>
       ${block('categories','Categories',S.settings.categories)}${block('buckets','Buckets',S.settings.buckets)}
       <p class="note">Removing a name keeps it on entries that already use it.</p>
+      <div class="field"><span class="label">Due-date reminders</span>
+        ${S.remState==='granted' ? `<p class="note">On. You get a notification for anything due today or overdue${S.bgSync?', checked about once a day in the background and':''} when you open the app. For a guaranteed alert, use <b>Add to calendar</b> on a lent or borrowed entry.</p>`
+          : S.remState==='denied' ? `<p class="note">Notifications are blocked. Turn them on in phone Settings → Apps → Dinar Ledger → Notifications, then reopen the app.</p>`
+          : S.remState==='unsupported' ? `<p class="note">This browser can't show notifications. Use <b>Add to calendar</b> on lent or borrowed entries instead.</p>`
+          : `<p class="note">Get a phone notification when money you lent or borrowed is due.</p><div><button class="btn primary" data-act="enable-reminders">Turn on reminders</button></div>`}
+      </div>
       <div class="field"><span class="label">Backup</span>
         <p class="note">Your entries live only on this phone. Export a backup file regularly, and import it to restore or move to a new phone.</p>
         <div class="chips"><button class="btn" data-act="export">Export backup</button>
@@ -517,6 +611,7 @@ function renderSheet(){
     <div class="field"><span class="label">Bucket</span>${chipRow(bks,e.bucket,'bucket','bucket')}</div>
     <div class="field"><label for="f-note">Note</label><input class="input" id="f-note" placeholder="Optional" value="${esc(e.note)}"></div>
     ${sheet.err?`<p class="err">${esc(sheet.err)}</p>`:''}
+    ${debt && e.due ? `<button type="button" class="btn" data-act="add-cal">Add to calendar</button><p class="note">Saves an event on ${esc(dayLabel(e.due))} with alerts the evening before and at 9 AM.</p>` : debt ? `<p class="note">Set a due date to get a reminder.</p>` : ''}
     <div class="actions">${sheet.isNew?'<span></span>':`<button class="btn danger ${sheet.armed?'armed':''}" data-act="delete">${sheet.armed?'Tap again to delete':'Delete'}</button>`}
       <button class="btn primary" data-act="save">${sheet.isNew?'Save entry':'Save changes'}</button></div>`;
 }
@@ -546,10 +641,14 @@ document.addEventListener('click', ev=>{
     case 'set-status': { const e = S.entries.find(x=>x.id===b.dataset.id); if (e && e.status!==v){ saveEntry({...e, status:v}); toast('Marked '+STATUSES[v].toLowerCase()); } break; }
     case 'open-paste': openSheet({mode:'paste', sms:''}); break;
     case 'open-new': openSheet({mode:'form', isNew:true, entry:blankEntry(b.dataset.type)}); break;
-    case 'open-lists': openSheet({mode:'lists'}); break;
+    case 'open-lists': remindersState().then(st=>{ S.remState = st; try{ S.bgSync = localStorage.getItem('dinar-bg-sync')==='1'; }catch(e){} if (sheet && sheet.mode==='lists') renderSheet(); }); openSheet({mode:'lists'}); break;
     case 'sample': startFromSms(SAMPLE_SMS); break;
     case 'read-sms': startFromSms(sheetEl.querySelector('#f-sms').value); break;
     case 'close': closeSheet(); break;
+    case 'enable-reminders': enableReminders().then(async()=>{ S.remState = await remindersState(); try{ S.bgSync = localStorage.getItem('dinar-bg-sync')==='1'; }catch(e){} renderSheet(); }); break;
+    case 'add-cal': { const e = sheet.entry; if (!e.due) break;
+      downloadFile('dinar-reminder-'+e.due+'.ics', icsFor(e), 'text/calendar');
+      toast('Open the downloaded file to add it to your calendar'); break; }
     case 'export': {
       const blob = new Blob([JSON.stringify({app:'dinar-ledger', version:1, exported:new Date().toISOString(), entries:S.entries, settings:S.settings}, null, 1)], {type:'application/json'});
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dinar-ledger-backup-'+todayISO()+'.json';
@@ -606,6 +705,7 @@ document.addEventListener('change', ev=>{
     }catch(e){ toast("That file isn't a Dinar Ledger backup."); } };
   r.readAsText(f); ev.target.value='';
 });
+document.addEventListener('change', ev=>{ if (ev.target.id==='f-due' && sheet && sheet.mode==='form'){ syncForm(); renderSheet(); } });
 document.addEventListener('keydown', ev=>{
   if (ev.key==='Escape' && sheet) closeSheet();
   if (ev.key==='Enter' && ev.target.id==='avail-in') ev.target.blur();
