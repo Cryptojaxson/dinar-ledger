@@ -192,6 +192,16 @@ textarea.input{resize:vertical;min-height:110px}
 .list-edit button{border:0;background:var(--sunk);border-radius:50%;width:22px;height:22px;display:grid;place-items:center;font-size:14px;line-height:1;color:var(--muted)}
 .note{font-size:12.5px;color:var(--muted)}
 
+.iban-line{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 10px;align-items:baseline;background:var(--sunk);border:1px dashed var(--line);border-radius:12px;padding:10px 12px}
+.iban-line .num{font-size:13.5px;overflow-wrap:anywhere}
+.iban-line small{grid-column:1/-1;color:var(--muted);font-size:12.5px}
+.iban-line.known{border:1px solid var(--in);box-shadow:0 0 12px rgb(61 240 182 / .2)}
+.iban-line.known small{color:var(--in)}
+.payees{display:flex;flex-direction:column;gap:6px}
+.payee{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:8px 8px 8px 12px}
+.payee b{display:block;font-weight:600}
+.payee small{color:var(--muted);font-size:12.5px}
+.payee button{border:0;background:var(--sunk);border-radius:50%;width:28px;height:28px;color:var(--muted);font-size:16px}
 .due-card{background:var(--surface);border:1px solid var(--pink);border-radius:var(--r);padding:12px 14px;display:flex;flex-direction:column;gap:8px;box-shadow:0 0 18px rgb(255 79 216 / .22)}
 .due-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;text-align:left;background:var(--sunk);border:0;border-radius:10px;padding:9px 11px;font-size:14px}
 .due-row span{min-width:0;overflow-wrap:anywhere}
@@ -253,7 +263,7 @@ const dayLabel = iso => { if(!iso) return ''; const [y,m,d] = iso.split('-'); co
 
 const S = {
   mode:'loading', entries:[],
-  settings:{available:{}, categories:DEF_CATS.slice(), buckets:DEF_BUCKETS.slice()},
+  settings:{available:{}, categories:DEF_CATS.slice(), buckets:DEF_BUCKETS.slice(), payees:{}},
   month: todayISO().slice(0,7), tab:'home', side:'receivable', ownStatus:'open', actFilter:'all'
 };
 let sheet = null;
@@ -270,6 +280,7 @@ function onWriteError(e){
 function loadLocal(){
   try{ const raw = localStorage.getItem(LKEY); if(raw){ const d = JSON.parse(raw);
     S.entries = d.entries||[]; S.settings = Object.assign(S.settings, d.settings||{}); } }catch(e){}
+  if (!S.settings.payees || typeof S.settings.payees!=='object') S.settings.payees = {};
 }
 function persistLocal(){ syncDueCache(); try{ localStorage.setItem(LKEY, JSON.stringify({entries:S.entries, settings:S.settings})); }catch(e){ toast('Phone storage is full. Export a backup and delete old entries.'); } }
 
@@ -394,8 +405,10 @@ const CAT_HINTS = [
 ];
 function parseSms(raw){
   const t = String(raw||'').replace(/\s+/g,' ').trim();
-  const out = {amount:'', currency:'', type:'', merchant:'', date:'', category:''};
+  const out = {amount:'', currency:'', type:'', merchant:'', date:'', category:'', iban:''};
   if (!t) return out;
+  const ib = t.replace(/(\b[A-Z]{2}\d{2})((?:\s?[A-Z0-9]{4}){2,7}(?:\s?[A-Z0-9]{1,4})?)\b/g, (m)=>m).match(/\b([A-Z]{2}\d{2}(?:\s?[A-Z0-9]){11,30})\b/);
+  if (ib) out.iban = ib[1].replace(/\s+/g,'').toUpperCase();
   const cur = '(BHD|BD|AED|SAR|USD|KWD|QAR|OMR|INR|EUR|GBP|PKR|PHP)';
   const m = t.match(new RegExp(cur+'\\.?\\s*([0-9][0-9,]*(?:\\.[0-9]+)?)','i')) ||
             t.match(new RegExp('([0-9][0-9,]*(?:\\.[0-9]+)?)\\s*'+cur+'\\b','i'));
@@ -409,7 +422,7 @@ function parseSms(raw){
   if (debit>=0 && (credit<0 || debit<=credit)) out.type='expense';
   else if (credit>=0) out.type='income';
   const mm = t.match(/\b(?:at|to|from|by)\s+([A-Za-z0-9&'.\- ]{2,40}?)(?=\s+(?:on|for|with|using|via|ref|avl|available|bal|card|a\/c|acct|account|at|dated)\b|[.,;]|$)/i);
-  if (mm){ const name = mm[1].trim(); if (!/^(your|you|a\/c|account|card)\b/i.test(name) && !/^\d+$/.test(name)) out.merchant = name; }
+  if (mm){ const name = mm[1].trim(); if (!/^(your|you|a\/c|account|card|iban)\b/i.test(name) && !/^\d+$/.test(name) && !(out.iban && name.replace(/\s/g,'').toUpperCase().includes(out.iban.slice(0,8)))) out.merchant = name; }
   let d = t.match(/\b(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})\b/);
   if (d){ let [_,dd,mo,yy] = d; if (yy.length===2) yy='20'+yy; if (+mo>=1 && +mo<=12 && +dd>=1 && +dd<=31) out.date = yy+'-'+pad(mo)+'-'+pad(dd); }
   else {
@@ -420,6 +433,8 @@ function parseSms(raw){
   for (const [re,cat] of CAT_HINTS){ if (re.test(out.merchant || '') || (!out.merchant && re.test(hay))){ out.category = cat; break; } }
   return out;
 }
+const fmtIban = i => String(i||'').replace(/(.{4})/g,'$1 ').trim();
+const maskIban = i => i ? i.slice(0,4)+' •••• '+i.slice(-4) : '';
 const SAMPLE_SMS = 'Dear Customer, your debit card ending 1234 was used for BHD 8.750 at LULU HYPERMARKET on 05/11/2026 18:42. Avl Bal BHD 412.300';
 
 /* ---------- views ---------- */
@@ -580,6 +595,11 @@ function renderSheet(){
     sheetEl.innerHTML = `<div class="grab"></div><div class="sheet-head"><h2 id="sheet-title">Categories &amp; buckets</h2><button class="btn ghost" data-act="close">Done</button></div>
       ${block('categories','Categories',S.settings.categories)}${block('buckets','Buckets',S.settings.buckets)}
       <p class="note">Removing a name keeps it on entries that already use it.</p>
+      <div class="field"><span class="label">Saved accounts</span>
+        ${Object.keys(S.settings.payees).length ? `<div class="payees">${Object.entries(S.settings.payees).map(([ib,p])=>`<div class="payee"><div><b>${esc(p.name)}</b><small class="num">${esc(maskIban(ib))}</small></div><button data-act="del-payee" data-v="${esc(ib)}" aria-label="Forget ${esc(p.name)}">×</button></div>`).join('')}</div>
+          <p class="note">To rename one, edit any entry for that account and change the name.</p>`
+          : `<p class="note">When an SMS includes an IBAN, the name you give it is saved here and filled in next time.</p>`}
+      </div>
       <div class="field"><span class="label">Due-date reminders</span>
         ${S.remState==='granted' ? `<p class="note">On. You get a notification for anything due today or overdue${S.bgSync?', checked about once a day in the background and':''} when you open the app. For a guaranteed alert, use <b>Add to calendar</b> on a lent or borrowed entry.</p>`
           : S.remState==='denied' ? `<p class="note">Notifications are blocked. Turn them on in phone Settings → Apps → Dinar Ledger → Notifications, then reopen the app.</p>`
@@ -600,6 +620,8 @@ function renderSheet(){
     <div class="sheet-head"><h2 id="sheet-title">${sheet.isNew?(sheet.sms?'Sort this SMS':'New entry'):'Edit entry'}</h2><button class="btn ghost" data-act="close">Cancel</button></div>
     ${sheet.sms?`<div class="sms">${esc(sheet.sms)}</div>`:''}
     ${sheet.hint?`<p class="hint">${esc(sheet.hint)}</p>`:''}
+    ${e.iban ? `<div class="iban-line ${sheet.known?'known':''}"><span class="label">IBAN</span><span class="num">${esc(fmtIban(e.iban))}</span>
+      <small>${sheet.known ? 'Recognised as <b>'+esc(sheet.known)+'</b>. Details filled from last time.' : 'New account. The name you enter below is saved for this IBAN.'}</small></div>` : ''}
     <div class="seg" role="group" aria-label="Type">${Object.entries(TYPES).map(([k,v])=>`<button type="button" data-act="type" data-v="${k}" aria-pressed="${e.type===k}">${v}</button>`).join('')}</div>
     <div class="field"><label for="f-amount">Amount</label><div class="amount-in"><span>${CUR}</span><input id="f-amount" inputmode="decimal" placeholder="0.000" value="${esc(e.amount===''?'':e.amount)}" ${sheet.sms?'':'data-autofocus'}></div></div>
     ${debt?`<div class="field"><label for="f-person">${e.type==='lent'?'Lent to':'Borrowed from'}</label><input class="input" id="f-person" placeholder="Name" value="${esc(e.person)}" ${sheet.sms?'data-autofocus':''}></div>
@@ -620,10 +642,19 @@ function startFromSms(text){
   if (!p.amount){ openSheet({mode:'paste', sms:text, err:"No amount found in that message. Check you pasted the full SMS, or add the entry with +."}); return; }
   const e = blankEntry(p.type||'expense');
   Object.assign(e, {amount: Number(p.amount).toFixed(3), date: p.date||todayISO(), title: p.merchant, category: p.category, source:'sms', sms:text.slice(0,600)});
-  let hint = '';
+  let hint = '', known = null;
+  if (p.iban){
+    e.iban = p.iban; known = S.settings.payees[p.iban];
+    if (known){
+      if (known.type) e.type = known.type;
+      if (e.type==='lent'||e.type==='borrowed') e.person = known.name; else e.title = known.name;
+      if (known.category) e.category = known.category;
+      if (known.bucket) e.bucket = known.bucket;
+    }
+  }
   if (p.currency && !['BHD','BD'].includes(p.currency)) hint = `The SMS shows ${p.currency} ${p.amount}. Enter the amount in ${CUR} if it was converted.`;
-  else if (!p.type) hint = "Couldn't tell if this was money in or out. Pick the type below.";
-  openSheet({mode:'form', isNew:true, sms:text, hint, entry:e});
+  else if (!p.type && !known) hint = "Couldn't tell if this was money in or out. Pick the type below.";
+  openSheet({mode:'form', isNew:true, sms:text, hint, entry:e, known: known ? known.name : ''});
 }
 
 /* ---------- events ---------- */
@@ -653,7 +684,7 @@ document.addEventListener('click', ev=>{
       const blob = new Blob([JSON.stringify({app:'dinar-ledger', version:1, exported:new Date().toISOString(), entries:S.entries, settings:S.settings}, null, 1)], {type:'application/json'});
       const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'dinar-ledger-backup-'+todayISO()+'.json';
       document.body.appendChild(a); a.click(); setTimeout(()=>{ URL.revokeObjectURL(a.href); a.remove(); }, 1000); toast('Backup saved to Downloads'); break; }
-    case 'edit': { const e = S.entries.find(x=>x.id===b.dataset.id); if (e) openSheet({mode:'form', isNew:false, sms:e.sms||'', entry:{...e}}); break; }
+    case 'edit': { const e = S.entries.find(x=>x.id===b.dataset.id); if (e) openSheet({mode:'form', isNew:false, sms:e.sms||'', entry:{...e}, known: e.iban && S.settings.payees[e.iban] ? S.settings.payees[e.iban].name : ''}); break; }
     case 'type': { const e = sheet.entry; const wasDebt = e.type==='lent'||e.type==='borrowed'; e.type=v; const isDebt = v==='lent'||v==='borrowed';
       if (isDebt && !wasDebt && !e.person && e.title) e.person = e.title;
       if (!isDebt && wasDebt && !e.title && e.person) e.title = e.person;
@@ -666,6 +697,7 @@ document.addEventListener('click', ev=>{
       const key = v==='cat'?'categories':'buckets'; if (!S.settings[key].includes(name)){ S.settings[key].push(name); saveSettings(); }
       if (v==='cat') sheet.entry.category = name; else sheet.entry.bucket = name; sheet.adding = null; renderSheet(); break; }
     case 'list-add': { const k = b.dataset.k; const i = sheetEl.querySelector('#l-'+k); const name=(i?.value||'').trim(); if (name && !S.settings[k].includes(name)){ S.settings[k].push(name); saveSettings(); } renderSheet(); break; }
+    case 'del-payee': delete S.settings.payees[v]; saveSettings(); renderSheet(); toast('Account forgotten'); break;
     case 'del-item': { const k=b.dataset.k; S.settings[k].splice(+b.dataset.i,1); saveSettings(); renderSheet(); break; }
     case 'delete': if (!sheet.armed){ sheet.armed = true; renderSheet(); } else { removeEntry(sheet.entry.id); closeSheet(); toast('Entry deleted'); } break;
     case 'save': {
@@ -677,6 +709,10 @@ document.addEventListener('click', ev=>{
       if (!(clean.type==='lent'||clean.type==='borrowed')){ delete clean.status; delete clean.due; }
       else if (!clean.status) clean.status='pending';
       if (!clean.createdAt) clean.createdAt = Date.now();
+      if (clean.iban){
+        const nm = (clean.type==='lent'||clean.type==='borrowed') ? clean.person : clean.title;
+        if (nm){ S.settings.payees[clean.iban] = {name:nm, type:clean.type, category:clean.category||'', bucket:clean.bucket||''}; saveSettings(); }
+      }
       const wasNew = sheet.isNew; saveEntry(clean); closeSheet();
       if (wasNew && clean.date.slice(0,7)!==S.month) S.month = clean.date.slice(0,7);
       render(); toast(wasNew?'Saved':'Changes saved'); break; }
@@ -700,7 +736,8 @@ document.addEventListener('change', ev=>{
       const ids = new Set(S.entries.map(e=>e.id)); let added = 0;
       for (const e of d.entries){ if (e && e.id && !ids.has(e.id)){ S.entries.push(e); added++; } }
       if (d.settings){ for (const k of ['categories','buckets']) for (const n of (d.settings[k]||[])) if (!S.settings[k].includes(n)) S.settings[k].push(n);
-        S.settings.available = Object.assign({}, d.settings.available||{}, S.settings.available); }
+        S.settings.available = Object.assign({}, d.settings.available||{}, S.settings.available);
+        S.settings.payees = Object.assign({}, d.settings.payees||{}, S.settings.payees); }
       persistLocal(); render(); toast(added+' entries imported');
     }catch(e){ toast("That file isn't a Dinar Ledger backup."); } };
   r.readAsText(f); ev.target.value='';
