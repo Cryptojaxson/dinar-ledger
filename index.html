@@ -38,7 +38,7 @@ body{background:radial-gradient(120% 60% at 85% -10%,var(--bg-glow),transparent 
 body{font-family:var(--body);font-size:15px;line-height:1.45;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
   padding-block:0 calc(96px + env(safe-area-inset-bottom,0px))}
-.app{max-width:540px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.app{max-width:540px;width:100%;min-width:0;margin:0 auto;display:flex;flex-direction:column;gap:18px}
 button,input,textarea,select{font:inherit;color:inherit}
 button{cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px}
@@ -104,7 +104,7 @@ h2{font-size:17px;font-weight:600}
 /* list */
 .list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
 .day{padding:8px 14px 4px;font-size:12px;color:var(--muted);font-weight:600;background:var(--sunk)}
-.item{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 14px;border:0;border-top:1px solid var(--line);background:none;width:100%;text-align:left}
+.item{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:12px;align-items:center;padding:11px 14px;border:0;border-top:1px solid var(--line);background:none;width:100%;text-align:left}
 .list>.item:first-child{border-top:0}
 .day+.item{border-top:0}
 .dot{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-family:var(--mono);font-size:13px;font-weight:600}
@@ -152,16 +152,123 @@ h2{font-size:17px;font-weight:600}
 .edit-link{background:none;border:0;padding:0;color:var(--accent);font-size:13px;font-weight:600;align-self:flex-start}
 
 /* nav + fab */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgb(10 13 44 / .94);backdrop-filter:blur(10px);border-top:1px solid var(--line);
-  padding:6px max(16px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
-.tabs-in{max-width:540px;margin:0 auto;display:grid;grid-template-columns:repeat(3,1fr)}
-.tabs button{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:12px;font-weight:600;color:var(--muted)}
-.tabs button svg{width:22px;height:22px}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:20;background:rgb(10 13 44 / .96);backdrop-filter:blur(10px);border-top:1px solid var(--line);border-radius:22px 22px 0 0;
+  padding:6px max(10px,env(safe-area-inset-right,0px)) calc(6px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+.tabs-in{max-width:540px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr 78px 1fr 1fr;align-items:end}
+.tabs button[data-v]{border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 0;font-size:11.5px;font-weight:600;color:var(--muted)}
+.tabs button[data-v] svg{width:22px;height:22px}
 .tabs button[aria-current="page"]{color:var(--accent);filter:drop-shadow(0 0 6px rgb(43 228 244 / .7))}
-.fab{position:fixed;z-index:21;right:calc(18px + env(safe-area-inset-right,0px));bottom:calc(78px + env(safe-area-inset-bottom,0px));
-  width:56px;height:56px;border-radius:18px;border:0;background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff;display:grid;place-items:center;box-shadow:0 0 22px rgb(255 79 216 / .55)}
+.fab-slot{position:relative;align-self:stretch}
+.fab{position:absolute;left:50%;top:-30px;transform:translateX(-50%);width:62px;height:62px;border-radius:50%;border:5px solid var(--bg);
+  background:linear-gradient(135deg,var(--pink),var(--violet));color:#fff;display:grid;place-items:center;box-shadow:0 0 22px rgb(255 79 216 / .55)}
 .fab svg{width:26px;height:26px}
-@media (min-width:600px){.fab{right:calc(50% - 270px)}}
+
+/* headers */
+.hello{display:flex;align-items:center;gap:12px;padding-top:16px}
+.avatar{width:46px;height:46px;border-radius:14px;flex:none;box-shadow:0 0 14px rgb(43 228 244 / .45)}
+.hello-text{flex:1;min-width:0;display:flex;flex-direction:column}
+.hello-text h1{font-size:21px;font-weight:700;letter-spacing:-.01em}
+.hello-text span{font-size:13px;color:var(--muted)}
+.round-btn{position:relative;width:42px;height:42px;border-radius:14px;border:1px solid var(--line);background:var(--surface);display:grid;place-items:center;flex:none;color:var(--ink)}
+.round-btn svg{width:20px;height:20px}
+.round-btn[aria-pressed="true"]{color:var(--accent);box-shadow:var(--glow)}
+.badge{position:absolute;top:-5px;right:-5px;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--pink);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;box-shadow:0 0 10px rgb(255 79 216 / .7)}
+.titlebar{display:grid;grid-template-columns:42px minmax(0,1fr) 42px;align-items:center;gap:8px;padding-top:16px}
+.titlebar h1{font-size:19px;font-weight:600;text-align:center}
+
+/* balance card */
+.bal{position:relative;overflow:hidden;background:linear-gradient(135deg,#3A1C8C 0%,#272392 45%,#0D4683 100%);border-radius:22px;padding:18px;display:flex;flex-direction:column;gap:12px;box-shadow:var(--glow)}
+.bal::after{content:"";position:absolute;right:-70px;top:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle,rgb(255 79 216 / .42),transparent 70%);pointer-events:none}
+.bal>*{position:relative;z-index:1}
+.bal .label{color:var(--accent)}
+.bal-top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.mini-month{display:flex;align-items:center;gap:2px;background:rgb(255 255 255 / .1);border-radius:99px;padding:2px}
+.card .mini-month{background:var(--sunk)}
+.mini-month button{border:0;background:none;width:30px;height:30px;border-radius:50%;display:grid;place-items:center;color:var(--ink)}
+.mini-month button svg{width:16px;height:16px}
+.mini-month span{font-size:12.5px;font-weight:600;padding:0 2px;white-space:nowrap}
+.bal-foot{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12.5px;color:var(--muted)}
+.bal-foot b{color:var(--ink);font-family:var(--mono);font-weight:500;font-size:14px}
+.bal-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.flow{display:flex;align-items:center;gap:9px;background:rgb(255 255 255 / .08);border-radius:14px;padding:9px 10px;min-width:0}
+.flow>div{min-width:0}
+.flow i{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;flex:none}
+.flow i svg{width:16px;height:16px}
+.flow.in i{background:var(--in-soft);color:var(--in)} .flow.out i{background:var(--out-soft);color:var(--out)}
+.flow small{display:block;font-size:11.5px;color:var(--muted)}
+.flow .num{font-size:14.5px;overflow-wrap:anywhere}
+
+/* quick actions */
+.quick{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0;min-width:0}
+.quick::-webkit-scrollbar{display:none}
+.qa{flex:none;display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:8px 12px 8px 8px;font-size:13.5px;font-weight:600;white-space:nowrap}
+.qa i{width:26px;height:26px;border-radius:8px;display:grid;place-items:center}
+.qa i svg{width:15px;height:15px}
+
+/* cards & charts */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.card-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.seg.sm{grid-auto-columns:auto;padding:3px}
+.seg.sm button{padding:5px 11px;font-size:12.5px}
+.brk{display:grid;grid-template-columns:minmax(0,1fr) 128px;gap:14px;align-items:center}
+.legend{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+.legend th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;font-weight:600;padding:0 0 6px}
+.legend th:last-child,.legend td:last-child{text-align:right;width:44%}
+.legend td{padding:4px 0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.legend .sw{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:7px}
+.donut{width:100%;max-width:100%;height:auto;display:block}
+.donut .c-num{fill:var(--ink);font:600 15px var(--mono)}
+.donut .c-lbl{fill:var(--muted);font:500 8.5px var(--body)}
+.chart{width:100%;height:auto;display:block}
+.chart .ax{fill:var(--muted);font:500 10px var(--mono)}
+.chart .grid{stroke:var(--line);stroke-dasharray:3 4}
+.keys{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted)}
+.keys i{display:inline-block;width:9px;height:9px;border-radius:3px;margin-right:6px}
+.ring-wrap{display:grid;grid-template-columns:minmax(0,1fr) 136px minmax(0,1fr);gap:8px;align-items:center}
+.ring-col{display:flex;flex-direction:column;gap:14px;min-width:0}
+.ring-col.r{text-align:right}
+.ring-col b{display:block;font:600 18px var(--mono)}
+.ring-col span{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.kpis{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:6px;color:#fff;min-width:0}
+.kpi.inc{background:linear-gradient(135deg,#6A3BFF,#3524A6);box-shadow:0 0 18px rgb(140 91 255 / .35)}
+.kpi.exp{background:linear-gradient(135deg,#E83FC4,#8E2A7E);box-shadow:0 0 18px rgb(255 79 216 / .3)}
+.kpi small{font-size:12.5px;opacity:.85}
+.kpi .num{font-size:17px;font-weight:600;overflow-wrap:anywhere}
+.kpi .k-foot{font-size:12px;opacity:.8}
+.seg.wide button{padding:10px 4px}
+
+/* calendar */
+.cal{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px;text-align:center}
+.cal .wd{font-size:11.5px;font-weight:700;color:var(--muted);padding:2px 0 6px}
+.cal button{border:0;background:none;aspect-ratio:1;width:100%;max-width:46px;justify-self:center;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font:500 13.5px var(--mono);color:var(--ink);padding:0}
+.cal button.today{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.cal button.sel{background:var(--violet);color:#fff;box-shadow:0 0 14px rgb(140 91 255 / .75)}
+.cal .dots{display:flex;gap:2px;height:4px}
+.cal .dots i{width:4px;height:4px;border-radius:50%}
+.cal button.sel .dots i{outline:1px solid rgb(255 255 255 / .6)}
+
+/* transactions */
+.filters{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0;min-width:0}
+.filters::-webkit-scrollbar{display:none}
+.fpill{flex:none;display:inline-flex;align-items:center;gap:2px;border-radius:99px;padding:3px;font-size:13px;font-weight:600;white-space:nowrap}
+.fpill.on{background:var(--accent);color:var(--accent-ink);box-shadow:0 0 12px rgb(43 228 244 / .4)}
+.fpill button{border:0;background:none;color:inherit;width:28px;height:28px;border-radius:50%;display:grid;place-items:center}
+.fpill button svg{width:15px;height:15px}
+.fselect{flex:none;appearance:none;-webkit-appearance:none;border:1px solid var(--line);border-radius:99px;padding:8px 32px 8px 13px;font-size:13px;font-weight:600;color:var(--ink);
+  background:var(--surface) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23959CD0' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") no-repeat right 11px center/13px}
+.dgroup{background:var(--surface);border:1px solid var(--line);border-radius:18px;overflow:hidden}
+.dgroup-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:12px 14px 2px}
+.dgroup-head>b{font-family:var(--display);font-weight:600;font-size:15px}
+.dgroup-head span{font-size:12.5px;color:var(--muted)}
+.dgroup-head span b{color:var(--out);font-weight:500}
+.dgroup .item,.list .item{border-top:0}
+.ico{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;flex:none}
+.ico svg{width:20px;height:20px}
+.ico b{font-size:14px;font-weight:600}
+.empty.sm{padding:16px}
+.foot{text-align:center}
+.debt-top{grid-template-columns:auto minmax(0,1fr) auto !important;align-items:center !important}
 
 /* sheet */
 .scrim{position:fixed;inset:0;z-index:40;background:rgb(6 14 17 / .5);display:flex;align-items:flex-end;justify-content:center}
@@ -218,24 +325,16 @@ textarea.input{resize:vertical;min-height:110px}
 </head>
 <body>
 <div class="app">
-  <header class="top">
-    <div class="brand-wrap"><img class="logo" src="icon-192.png?v=2" alt="" width="44" height="44"><div class="brand"><h1>Dinar Ledger</h1><span id="mode-line">Expenses, money lent and borrowed</span></div></div>
-    <button class="btn primary" data-act="open-paste" id="paste-btn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/></svg>
-      Paste SMS</button>
-  </header>
   <div id="banner" class="banner" hidden></div>
   <main id="view" class="app"></main>
 </div>
 
-<button class="fab" data-act="open-new" aria-label="Add entry">
-  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-</button>
-
 <nav class="tabs" aria-label="Sections"><div class="tabs-in">
-  <button data-act="tab" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="16" width="7" height="5" rx="1.5"/></svg>Dashboard</button>
-  <button data-act="tab" data-v="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Transactions</button>
-  <button data-act="tab" data-v="owed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>Lent &amp; Borrowed</button>
+  <button data-act="tab" data-v="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/></svg>Home</button>
+  <button data-act="tab" data-v="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/></svg>Activity</button>
+  <span class="fab-slot"><button class="fab" data-act="open-new" aria-label="Add entry"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button></span>
+  <button data-act="tab" data-v="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M6 17v-6M11 17V5M16 17v-9M20 17v-3"/></svg>Stats</button>
+  <button data-act="tab" data-v="owed"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 7h12l-3-3M17 17H5l3 3"/></svg>Lent</button>
 </div></nav>
 
 <div class="scrim" id="scrim" hidden><div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title"></div></div>
@@ -259,12 +358,13 @@ const sum = arr => arr.reduce((a,e)=>a+(Number(e.amount)||0),0);
 const monthLabel = m => { const [y,mo] = m.split('-'); return MONTHS[+mo-1]+' '+y; };
 const dayLabel = iso => { if(!iso) return ''; const [y,m,d] = iso.split('-'); const dt = new Date(+y,+m-1,+d);
   const t = todayISO(); if (iso===t) return 'Today';
+  const yd = new Date(); yd.setDate(yd.getDate()-1); if (iso===yd.getFullYear()+'-'+pad(yd.getMonth()+1)+'-'+pad(yd.getDate())) return 'Yesterday';
   return dt.toLocaleDateString('en-GB',{weekday:'short',day:'numeric',month:'short'}); };
 
 const S = {
   mode:'loading', entries:[],
   settings:{available:{}, categories:DEF_CATS.slice(), buckets:DEF_BUCKETS.slice(), payees:{}},
-  month: todayISO().slice(0,7), tab:'home', side:'receivable', ownStatus:'open', actFilter:'all'
+  month: todayISO().slice(0,7), tab:'home', side:'receivable', ownStatus:'open', actFilter:'all', catFilter:'', search:'', searchOpen:false, brk:'category', chart:'weekly', topKind:'expense', selDay:null
 };
 let sheet = null;
 
@@ -405,7 +505,7 @@ const CAT_HINTS = [
 ];
 function parseSms(raw){
   const t = String(raw||'').replace(/\s+/g,' ').trim();
-  const out = {amount:'', currency:'', type:'', merchant:'', date:'', category:'', iban:''};
+  const out = {amount:'', currency:'', type:'', merchant:'', date:'', category:'', iban:'', time:''};
   if (!t) return out;
   const ib = t.replace(/(\b[A-Z]{2}\d{2})((?:\s?[A-Z0-9]{4}){2,7}(?:\s?[A-Z0-9]{1,4})?)\b/g, (m)=>m).match(/\b([A-Z]{2}\d{2}(?:\s?[A-Z0-9]){11,30})\b/);
   if (ib) out.iban = ib[1].replace(/\s+/g,'').toUpperCase();
@@ -429,6 +529,7 @@ function parseSms(raw){
     d = t.match(/\b(\d{1,2})[\s\-]?(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*[\s\-,]*(\d{2,4})\b/i);
     if (d){ let yy = d[3]; if (yy.length===2) yy='20'+yy; const mo = ['jan','feb','mar','apr','may','jun','jul','aug','sep','oct','nov','dec'].indexOf(d[2].toLowerCase().slice(0,3))+1; out.date = yy+'-'+pad(mo)+'-'+pad(d[1]); }
   }
+  const tm = t.match(/\b([01]?\d|2[0-3]):([0-5]\d)\b/); if (tm) out.time = pad(tm[1])+':'+tm[2];
   const hay = out.merchant + ' ' + t;
   for (const [re,cat] of CAT_HINTS){ if (re.test(out.merchant || '') || (!out.merchant && re.test(hay))){ out.category = cat; break; } }
   return out;
@@ -439,44 +540,141 @@ const SAMPLE_SMS = 'Dear Customer, your debit card ending 1234 was used for BHD 
 
 /* ---------- views ---------- */
 const view = document.getElementById('view');
+const PALETTE = ['#2BE4F4','#FF4FD8','#8C5BFF','#3DF0B6','#FFC75A','#FF5E9C','#4D8BFF','#C79BFF'];
+const CAT_COLORS = {Food:'#FF4FD8', Groceries:'#3DF0B6', Fuel:'#FFC75A', Transport:'#2BE4F4', Bills:'#8C5BFF', Shopping:'#FF5E9C', Health:'#8FD8FF', Rent:'#4D8BFF', Entertainment:'#C79BFF', Other:'#6E76A8'};
+const C_IN = '#3DF0B6', C_OUT = '#FF5E9C', C_GREY = '#6E76A8';
+const ICONS = {
+  Food:'<path d="M7 3v7a2 2 0 0 0 4 0V3M9 12v9M17 21V3c-2.2 1.2-3 3.6-3 6.5 0 2 1 3.5 3 3.5"/>',
+  Groceries:'<path d="M3 4h2.2l2.3 10.2a1 1 0 0 0 1 .8h8.9a1 1 0 0 0 1-.8L20 8H6.1"/><circle cx="9.5" cy="19.5" r="1.3"/><circle cx="17" cy="19.5" r="1.3"/>',
+  Fuel:'<path d="M5 21V5a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v16M3 21h14M8 8h4M15 10h2a2 2 0 0 1 2 2v5a1.5 1.5 0 0 0 3 0V9l-3-3"/>',
+  Transport:'<path d="M4 13l2-6a2 2 0 0 1 1.9-1.4h8.2A2 2 0 0 1 18 7l2 6v4H4zM5 17v2M19 17v2M8 13.5h.01M16 13.5h.01"/>',
+  Bills:'<path d="M6 3h12v18l-3-2-3 2-3-2-3 2zM9 8h6M9 12h6M9 16h3"/>',
+  Shopping:'<path d="M5 8h14l-1 12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1zM9 8V6a3 3 0 0 1 6 0v2"/>',
+  Health:'<path d="M12 21s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 11c0 5.6-7 10-7 10zM12 10v5M9.5 12.5h5"/>',
+  Rent:'<path d="M3 11l9-7 9 7M5 10v10h14V10M10 20v-5h4v5"/>',
+  Entertainment:'<path d="M4 6h16v12H4zM10 9.5v5l4-2.5z"/>',
+  Other:'<path d="M6 12h.01M12 12h.01M18 12h.01"/>',
+  income:'<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+  lent:'<path d="M7 17L17 7M9 7h8v8"/>',
+  borrowed:'<path d="M17 7L7 17M15 17H7V9"/>',
+};
+const svg = (inner, sw=2) => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${inner}</svg>`;
+const I_LEFT = '<path d="M15 6l-6 6 6 6"/>', I_RIGHT = '<path d="M9 6l6 6-6 6"/>';
+const I_BELL = '<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0"/>';
+const I_SET = '<path d="M4 6h10M18 6h2M4 12h4M12 12h8M4 18h12"/><circle cx="16" cy="6" r="2"/><circle cx="10" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>';
+const I_SEARCH = '<circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/>';
+const I_SMS = '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 9h8M8 13h5"/>';
+const I_PLUS = '<path d="M12 5v14M5 12h14"/>';
+const I_GRID = '<rect x="4" y="4" width="6" height="6" rx="1.5"/><rect x="14" y="4" width="6" height="6" rx="1.5"/><rect x="4" y="14" width="6" height="6" rx="1.5"/><rect x="14" y="14" width="6" height="6" rx="1.5"/>';
+
+function hexA(h,a){ const n = parseInt(h.slice(1),16); return `rgba(${n>>16&255},${n>>8&255},${n&255},${a})`; }
+function hashColor(s){ let h = 0; for (const c of String(s)) h = (h*31 + c.charCodeAt(0))>>>0; return PALETTE[h%PALETTE.length]; }
+function catColor(c){ return CAT_COLORS[c] || (c ? hashColor(c) : C_GREY); }
+function bucketColor(b){ const i = S.settings.buckets.indexOf(b); return i>=0 ? PALETTE[i%PALETTE.length] : (b ? hashColor(b) : C_GREY); }
+function entryLook(e){
+  if (e.type==='income') return {color:C_IN, icon:ICONS.income};
+  if (e.type==='lent') return {color:'#2BE4F4', icon:ICONS.lent};
+  if (e.type==='borrowed') return {color:'#FFC75A', icon:ICONS.borrowed};
+  return {color:catColor(e.category), icon:ICONS[e.category], letter:(e.category||e.title||'?').trim().charAt(0).toUpperCase()};
+}
+function icoHTML(l){ return `<span class="ico" style="background:${hexA(l.color,.16)};color:${l.color}" aria-hidden="true">${l.icon ? svg(l.icon,1.9) : `<b class="num">${esc(l.letter)}</b>`}</span>`; }
+const timeLabel = t => { if (!t) return ''; const [h,m] = t.split(':').map(Number); return ((h%12)||12)+':'+pad(m)+' '+(h<12?'AM':'PM'); };
+const fmtShort = n => n>=10000 ? (n/1000).toFixed(1)+'k' : n>=100 ? Math.round(n).toLocaleString('en-US') : (Number(n)||0).toFixed(n>=10?1:2);
+const sortEntries = l => l.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.time||'').localeCompare(a.time||'') || (b.createdAt||0)-(a.createdAt||0));
+
 function monthEntries(){ return S.entries.filter(e => (e.date||'').startsWith(S.month)); }
 function owedTotals(type){
   const list = S.entries.filter(e=>e.type===type);
   const by = st => sum(list.filter(e=>(e.status||'pending')===st));
   return {pending:by('pending'), paid:by('paid'), cleared:by('cleared'), count:list.filter(e=>(e.status||'pending')==='pending').length};
 }
-function itemHTML(e){
-  const label = e.type==='lent'||e.type==='borrowed' ? (e.person||e.title||TYPES[e.type]) : (e.title||e.category||TYPES[e.type]);
-  const sub = [TYPES[e.type], e.type==='lent'||e.type==='borrowed' ? '' : e.category, e.bucket].filter(Boolean).join(' · ');
-  const sign = e.type==='expense'||e.type==='lent' ? '−' : '+';
-  const st = (e.type==='lent'||e.type==='borrowed') ? `<span class="pill ${e.status||'pending'}">${STATUSES[e.status||'pending']}</span>` : '';
-  return `<button class="item t-${e.type}" data-act="edit" data-id="${esc(e.id)}">
-    <span class="dot" aria-hidden="true">${esc((label||'?').trim().charAt(0).toUpperCase())}</span>
-    <span class="meta"><b>${esc(label)}</b><small>${esc(sub)}${st}</small></span>
-    <span class="amt num">${sign}${fmt(e.amount)}</span></button>`;
-}
-function groupedList(list){
-  if (!list.length) return '';
-  const sorted = list.slice().sort((a,b)=> (b.date||'').localeCompare(a.date||'') || (b.createdAt||0)-(a.createdAt||0));
-  let html = '', last = null;
-  for (const e of sorted){ if (e.date!==last){ html += `<div class="day">${esc(dayLabel(e.date))}</div>`; last = e.date; } html += itemHTML(e); }
-  return `<div class="list">${html}</div>`;
-}
-function barsHTML(rows){
-  const max = Math.max(...rows.map(r=>r[1]), 0);
-  const total = rows.reduce((a,r)=>a+r[1],0);
-  return `<div class="bars">${rows.map(([k,v])=>`<div class="bar-row"><span>${esc(k)}<small>${total?Math.round(v/total*100):0}%</small></span><span class="num">${fmt(v)}</span>
-    <span class="track"><i style="width:${max? (v/max*100).toFixed(1):0}%"></i></span></div>`).join('')}</div>`;
-}
 function groupBy(list, key, fallback){
   const m = new Map(); for (const e of list){ const k = e[key]||fallback; m.set(k,(m.get(k)||0)+(Number(e.amount)||0)); }
   return [...m.entries()].sort((a,b)=>b[1]-a[1]);
 }
-function monthSwitch(){
-  return `<div class="month"><button class="icon-btn" data-act="month" data-v="-1" aria-label="Previous month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"/></svg></button>
-    <b>${monthLabel(S.month)}</b>
-    <button class="icon-btn" data-act="month" data-v="1" aria-label="Next month"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button></div>`;
+function itemHTML(e, opts={}){
+  const debt = e.type==='lent'||e.type==='borrowed';
+  const label = debt ? (e.person||e.title||TYPES[e.type]) : (e.title||e.category||TYPES[e.type]);
+  const when = opts.noDate ? timeLabel(e.time) : [dayLabel(e.date), timeLabel(e.time)].filter(Boolean).join(', ');
+  const sub = [debt ? TYPES[e.type] : (e.category||TYPES[e.type]), when].filter(Boolean).join(' · ');
+  const sign = e.type==='expense'||e.type==='lent' ? '−' : '+';
+  const st = debt ? `<span class="pill ${e.status||'pending'}">${STATUSES[e.status||'pending']}</span>` : '';
+  return `<button class="item t-${e.type}" data-act="edit" data-id="${esc(e.id)}">${icoHTML(entryLook(e))}
+    <span class="meta"><b>${esc(label)}</b><small>${esc(sub)}${st}</small></span>
+    <span class="amt num">${sign}${fmt(e.amount)}</span></button>`;
 }
+function dayGroupsHTML(list){
+  const g = new Map();
+  for (const e of sortEntries(list)){ if (!g.has(e.date)) g.set(e.date, []); g.get(e.date).push(e); }
+  return [...g.entries()].map(([d,items])=>{ const sp = sum(items.filter(e=>e.type==='expense'));
+    return `<section class="dgroup"><div class="dgroup-head"><b>${esc(dayLabel(d))}</b><span>${sp ? 'Spent <b class="num">'+fmt(sp)+'</b>' : ''}</span></div>${items.map(e=>itemHTML(e,{noDate:true})).join('')}</section>`; }).join('');
+}
+function monthArrows(withLabel){
+  const [y,m] = S.month.split('-');
+  return `<div class="mini-month"><button data-act="month" data-v="-1" aria-label="Previous month">${svg(I_LEFT,2.2)}</button>${withLabel ? `<span>${MONTHS[+m-1].slice(0,3)} ${y}</span>` : ''}<button data-act="month" data-v="1" aria-label="Next month">${svg(I_RIGHT,2.2)}</button></div>`;
+}
+function titleBar(title, right){
+  return `<header class="titlebar"><button class="round-btn" data-act="tab" data-v="home" aria-label="Back to home">${svg(I_LEFT,2.2)}</button><h1>${title}</h1>${right||'<span></span>'}</header>`;
+}
+function segHTML(act, cur, opts, cls='sm'){
+  return `<div class="seg ${cls}" role="group">${opts.map(([k,v])=>`<button data-act="${act}" data-v="${k}" aria-pressed="${cur===k}">${v}</button>`).join('')}</div>`;
+}
+
+/* charts */
+function breakdownRows(list){
+  const key = S.brk==='bucket' ? 'bucket' : 'category';
+  const g = groupBy(list, key, key==='bucket' ? 'No bucket' : 'Uncategorised');
+  const rows = g.slice(0,5).map(([k,v])=>({label:k, value:v, color: key==='bucket' ? bucketColor(k) : catColor(k==='Uncategorised'?'':k)}));
+  if (g.length>5) rows.push({label:'Others', value:g.slice(5).reduce((a,r)=>a+r[1],0), color:C_GREY});
+  return rows;
+}
+function donutSVG(rows, total, label){
+  const r = 42, C = 2*Math.PI*r; let off = 0;
+  const segs = total>0 ? rows.map(x=>{ const len = x.value/total*C; const gap = rows.length>1 ? Math.min(2.4, len*.3) : 0;
+    const s = `<circle cx="60" cy="60" r="${r}" fill="none" stroke-width="15" style="stroke:${x.color}" stroke-dasharray="${Math.max(0,len-gap).toFixed(2)} ${(C-len+gap).toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 60 60)"><title>${esc(x.label)}: ${CUR} ${fmt(x.value)}</title></circle>`;
+    off += len; return s; }).join('') : '';
+  return `<svg class="donut" viewBox="0 0 120 120" role="img" aria-label="${esc(label)}"><circle cx="60" cy="60" r="${r}" fill="none" stroke-width="15" style="stroke:var(--sunk)"/>${segs}
+    <text x="60" y="60" text-anchor="middle" class="c-num">${fmtShort(total)}</text><text x="60" y="74" text-anchor="middle" class="c-lbl">${CUR} spent</text></svg>`;
+}
+function niceStep(max){ if (max<=0) return 1; const raw = max/4, p = Math.pow(10, Math.floor(Math.log10(raw))), f = raw/p; return (f<=1?1:f<=2?2:f<=5?5:10)*p; }
+const axisLbl = v => v>=1000 ? (+(v/1000).toFixed(1))+'k' : String(+v.toFixed(2));
+function barChartSVG(groups, series){
+  const W = 340, H = 196, L = 38, R = 6, T = 12, B = 24, iw = W-L-R, ih = H-T-B;
+  const max = Math.max(0, ...groups.flatMap(g=>g.values)), step = niceStep(max), top = step*Math.max(1, Math.ceil(max/step - 1e-9));
+  const y = v => T + ih - (v/top)*ih;
+  let s = '';
+  for (let i = 0; i <= Math.round(top/step); i++){ const v = i*step, yy = y(v).toFixed(1);
+    s += `<line class="grid" x1="${L}" x2="${W-R}" y1="${yy}" y2="${yy}"/><text class="ax" x="${L-6}" y="${(+yy+3.5).toFixed(1)}" text-anchor="end">${axisLbl(v)}</text>`; }
+  const gw = iw/groups.length, n = series.length, gap = n>1 ? 3 : 0, bw = Math.max(2, Math.min(16, (gw*.68 - gap*(n-1))/n));
+  groups.forEach((g,i)=>{ const cx = L + gw*i + gw/2, tw = n*bw + (n-1)*gap;
+    g.values.forEach((v,j)=>{ const x = cx - tw/2 + j*(bw+gap), h = v>0 ? Math.max(2, v/top*ih) : 0;
+      if (h) s += `<rect x="${x.toFixed(1)}" y="${(T+ih-h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="${Math.min(4,bw/2).toFixed(1)}" style="fill:${series[j].color}"><title>${esc(g.label)} · ${esc(series[j].name)}: ${CUR} ${fmt(v)}</title></rect>`; });
+    if (g.showLabel!==false) s += `<text class="ax" x="${cx.toFixed(1)}" y="${H-7}" text-anchor="middle">${esc(g.label)}</text>`; });
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(series.map(x=>x.name).join(' and '))} chart">${s}</svg>`;
+}
+function keysHTML(items){ return `<div class="keys">${items.map(([n,c])=>`<span><i style="background:${c}"></i>${n}</span>`).join('')}</div>`; }
+
+/* calendar */
+function ensureSelDay(){
+  if (S.selDay && S.selDay.startsWith(S.month)) return;
+  const t = todayISO(); S.selDay = t.startsWith(S.month) ? t : S.month+'-01';
+}
+function calendarHTML(){
+  const [y,m] = S.month.split('-').map(Number), first = new Date(y,m-1,1).getDay(), days = new Date(y,m,0).getDate(), t = todayISO();
+  const flags = {}; for (const e of monthEntries()){ (flags[e.date] = flags[e.date]||{})[e.type] = true; }
+  const dueDays = new Set(S.entries.filter(e=>(e.type==='lent'||e.type==='borrowed') && e.due && (e.status||'pending')!=='cleared').map(e=>e.due));
+  let h = ['S','M','T','W','T','F','S'].map(d=>`<span class="wd">${d}</span>`).join('');
+  for (let i = 0; i < first; i++) h += '<span></span>';
+  for (let d = 1; d <= days; d++){
+    const iso = S.month+'-'+pad(d), f = flags[iso]||{};
+    const dots = [f.expense?C_OUT:null, f.income?C_IN:null, (f.lent||f.borrowed)?'#2BE4F4':null, dueDays.has(iso)?'#FFC75A':null].filter(Boolean);
+    h += `<button class="${iso===S.selDay?'sel':''}${iso===t?' today':''}" data-act="cal-day" data-v="${iso}" aria-pressed="${iso===S.selDay}" aria-label="${esc(dayLabel(iso))}">${d}<span class="dots">${dots.map(c=>`<i style="background:${c}"></i>`).join('')}</span></button>`;
+  }
+  return `<div class="cal">${h}</div>`;
+}
+
+/* home */
+function greeting(){ const h = new Date().getHours(); return h<12 ? 'Good morning' : h<17 ? 'Good afternoon' : 'Good evening'; }
 function renderHome(){
   const me = monthEntries();
   const exp = me.filter(e=>e.type==='expense'), inc = me.filter(e=>e.type==='income');
@@ -486,45 +684,118 @@ function renderHome(){
   const left = (Number(avail)||0) - spent;
   const pct = hasAvail && Number(avail)>0 ? Math.min(100, spent/Number(avail)*100) : 0;
   const r = owedTotals('lent'), p = owedTotals('borrowed');
-  const loading = S.mode==='loading';
-  let html = monthSwitch();
-  html += `<section class="panel" aria-label="Monthly balance">
-    <label class="label" for="avail-in">Available for ${MONTHS[+S.month.slice(5)-1]}</label>
+  const due = dueList();
+  let html = `<header class="hello"><img class="avatar" src="icon-192.png?v=2" alt="" width="46" height="46">
+    <div class="hello-text"><h1>${greeting()}</h1><span>${new Date().toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'})}</span></div>
+    <button class="round-btn" data-act="bell" aria-label="Due payments${due.length?': '+due.length:''}">${svg(I_BELL)}${due.length?`<span class="badge">${due.length}</span>`:''}</button>
+    <button class="round-btn" data-act="open-lists" aria-label="Settings, reminders and backup">${svg(I_SET)}</button></header>`;
+  html += `<section class="bal" aria-label="Monthly balance">
+    <div class="bal-top"><label class="label" for="avail-in">Available balance</label>${monthArrows(true)}</div>
     <div class="avail"><span>${CUR}</span><input id="avail-in" inputmode="decimal" placeholder="0.000" value="${hasAvail? esc(Number(avail).toFixed(3)) : ''}" aria-label="Available amount in ${CUR}"></div>
     <div class="meter ${hasAvail && spent>Number(avail)?'over':''}"><i style="width:${pct.toFixed(1)}%"></i></div>
-    <div class="figs">
-      <div><small>Spent</small><span class="num">${fmt(spent)}</span></div>
-      <div><small>${left<0?'Over by':'Left'}</small><span class="num">${hasAvail? fmt(Math.abs(left)) : '—'}</span></div>
-      <div><small>Income</small><span class="num">${fmt(income)}</span></div>
+    <div class="bal-foot"><span>${hasAvail ? (left<0 ? 'Over budget by' : 'Left this month') : 'Tap the amount to set this month’s budget'}</span>${hasAvail ? `<b>${fmt(Math.abs(left))}</b>` : ''}</div>
+    <div class="bal-row">
+      <div class="flow in"><i>${svg(ICONS.income,2.2)}</i><div><small>Income</small><span class="num">${fmt(income)}</span></div></div>
+      <div class="flow out"><i>${svg('<path d="M12 20V9M7 14l5-5 5 5M5 4h14"/>',2.2)}</i><div><small>Expenses</small><span class="num">${fmt(spent)}</span></div></div>
     </div></section>`;
-  const due = dueList();
-  if (due.length) html += `<section class="due-card" aria-label="Due payments"><div class="section-head"><h2>Due soon</h2><span class="label">${due.length}</span></div>
+  html += `<div class="quick">
+    <button class="qa" data-act="open-paste"><i style="background:${hexA('#2BE4F4',.18)};color:#2BE4F4">${svg(I_SMS,2.2)}</i>Paste SMS</button>
+    <button class="qa" data-act="open-new"><i style="background:${hexA('#FF4FD8',.18)};color:#FF4FD8">${svg(I_PLUS,2.6)}</i>Add expense</button>
+    <button class="qa" data-act="open-new" data-type="lent"><i style="background:${hexA('#3DF0B6',.18)};color:#3DF0B6">${svg(ICONS.lent,2.4)}</i>Lend</button>
+    <button class="qa" data-act="open-new" data-type="borrowed"><i style="background:${hexA('#FFC75A',.18)};color:#FFC75A">${svg(ICONS.borrowed,2.4)}</i>Borrow</button>
+    <button class="qa" data-act="open-lists"><i style="background:${hexA('#8C5BFF',.22)};color:#B596FF">${svg(I_GRID,2)}</i>Categories</button></div>`;
+  if (due.length) html += `<section class="due-card" id="due-card" aria-label="Due payments"><div class="section-head"><h2>Due soon</h2><span class="label">${due.length}</span></div>
     ${due.map(d=>`<button class="due-row w-${d.when}" data-act="edit" data-id="${esc(d.id)}"><span>${esc(dueText(d))}</span><i>${d.when==='overdue'?'Overdue':d.when==='today'?'Today':'Tomorrow'}</i></button>`).join('')}</section>`;
   html += `<div class="tiles">
     <button class="tile recv" data-act="goto-owed" data-v="receivable"><span class="label">Receivable</span><span class="num">${fmt(r.pending)}</span><small>${r.count} pending${r.paid?` · ${fmt(r.paid)} paid, not cleared`:''}</small></button>
     <button class="tile pay" data-act="goto-owed" data-v="payable"><span class="label">Payable</span><span class="num">${fmt(p.pending)}</span><small>${p.count} pending${p.paid?` · ${fmt(p.paid)} paid, not cleared`:''}</small></button></div>`;
   if (!me.length){
-    html += `<div class="empty"><h2>${loading?'Loading your entries…':'No entries for '+MONTHS[+S.month.slice(5)-1]+' yet'}</h2>
-      <p>Copy a bank SMS and tap <b>Paste SMS</b>, or press <b>+</b> to add one by hand. Each entry gets a category and a bucket, and shows up here.</p>
+    html += `<div class="empty"><h2>No entries for ${MONTHS[+S.month.slice(5)-1]} yet</h2>
+      <p>Share a bank SMS to Dinar Ledger, tap <b>Paste SMS</b>, or press <b>+</b> to add one by hand.</p>
       <button class="btn" data-act="sample">Try a sample SMS</button></div>`;
   } else {
-    if (exp.length) html += `<section class="section"><div class="section-head"><h2>By category</h2></div>${barsHTML(groupBy(exp,'category','Uncategorised'))}</section>`;
-    if (exp.length) html += `<section class="section"><div class="section-head"><h2>By bucket</h2></div>${barsHTML(groupBy(exp,'bucket','No bucket'))}</section>`;
-    const recent = me.slice().sort((a,b)=>(b.date||'').localeCompare(a.date||'')||(b.createdAt||0)-(a.createdAt||0)).slice(0,5);
-    html += `<section class="section"><div class="section-head"><h2>Recent</h2><button class="link" data-act="tab" data-v="activity">See all</button></div><div class="list">${recent.map(itemHTML).join('')}</div></section>`;
+    const rows = breakdownRows(exp);
+    html += `<section class="card"><div class="card-head"><h2>Spending breakdown</h2>${segHTML('brk', S.brk, [['category','Category'],['bucket','Bucket']])}</div>
+      ${exp.length ? `<div class="brk"><table class="legend"><thead><tr><th>${S.brk==='bucket'?'Bucket':'Category'}</th><th>Amount</th></tr></thead><tbody>
+        ${rows.map(x=>`<tr><td><span class="sw" style="background:${x.color}"></span>${esc(x.label)}</td><td class="num">${fmt(x.value)}</td></tr>`).join('')}</tbody></table>
+        ${donutSVG(rows, spent, 'Spending by '+(S.brk==='bucket'?'bucket':'category'))}</div>` : '<p class="note">No spending recorded this month yet.</p>'}</section>`;
+    const recent = sortEntries(me).slice(0,5);
+    html += `<section class="section"><div class="section-head"><h2>Recent transactions</h2><button class="link" data-act="tab" data-v="activity">See all</button></div><div class="list">${recent.map(e=>itemHTML(e)).join('')}</div></section>`;
   }
-  html += `<div class="section-head"><span class="note">Saved on this phone. Export a backup now and then.</span><button class="link" data-act="open-lists">Settings, reminders &amp; backup</button></div>`;
+  html += `<p class="note foot">Saved on this phone. Export a backup now and then from Settings.</p>`;
   view.innerHTML = html;
+}
+
+/* transactions */
+function txFiltered(){
+  let l = monthEntries();
+  if (S.actFilter!=='all') l = l.filter(e=>e.type===S.actFilter);
+  if (S.catFilter) l = l.filter(e=>e.category===S.catFilter);
+  const q = (S.search||'').trim().toLowerCase();
+  if (q) l = l.filter(e=>[e.title,e.person,e.category,e.bucket,e.note,TYPES[e.type]].join(' ').toLowerCase().includes(q));
+  return l;
+}
+function txListHTML(){
+  const l = txFiltered();
+  if (!l.length) return `<div class="empty"><p>No matching entries in ${monthLabel(S.month)}.</p></div>`;
+  const spent = sum(l.filter(e=>e.type==='expense')), inc = sum(l.filter(e=>e.type==='income'));
+  return `<p class="note">${l.length} entr${l.length===1?'y':'ies'} · Spent ${CUR} ${fmt(spent)}${inc?` · Income ${CUR} ${fmt(inc)}`:''}</p>` + dayGroupsHTML(l);
 }
 function renderActivity(){
-  const me = monthEntries();
-  const f = S.actFilter;
-  const list = f==='all' ? me : me.filter(e=>e.type===f);
-  let html = monthSwitch();
-  html += `<div class="chips" role="group" aria-label="Filter">${[['all','All'],...Object.entries(TYPES)].map(([k,v])=>`<button class="chip" data-act="act-filter" data-v="${k}" aria-pressed="${f===k}">${v}</button>`).join('')}</div>`;
-  html += list.length ? groupedList(list) : `<div class="empty"><p>No ${f==='all'?'':TYPES[f].toLowerCase()+' '}entries in ${monthLabel(S.month)}.</p></div>`;
+  const cats = [...new Set([...S.settings.categories, ...monthEntries().map(e=>e.category).filter(Boolean)])];
+  if (S.catFilter && !cats.includes(S.catFilter)) cats.push(S.catFilter);
+  let html = titleBar('Transactions', `<button class="round-btn" data-act="toggle-search" aria-label="Search" aria-pressed="${!!S.searchOpen}">${svg(I_SEARCH,2.2)}</button>`);
+  html += `<div class="filters">
+    <div class="fpill on"><button data-act="month" data-v="-1" aria-label="Previous month">${svg(I_LEFT,2.4)}</button><span>${S.month===todayISO().slice(0,7)?'This month':monthLabel(S.month)}</span><button data-act="month" data-v="1" aria-label="Next month">${svg(I_RIGHT,2.4)}</button></div>
+    <select class="fselect" id="f-cat" aria-label="Category"><option value="">All categories</option>${cats.map(c=>`<option value="${esc(c)}"${c===S.catFilter?' selected':''}>${esc(c)}</option>`).join('')}</select>
+    <select class="fselect" id="f-type" aria-label="Type"><option value="all">All types</option>${Object.entries(TYPES).map(([k,v])=>`<option value="${k}"${k===S.actFilter?' selected':''}>${v}</option>`).join('')}</select></div>`;
+  if (S.searchOpen) html += `<input class="input" id="tx-search" type="search" placeholder="Search name, category or note" value="${esc(S.search||'')}" autocomplete="off">`;
+  html += `<div id="tx-list" class="section">${txListHTML()}</div>`;
+  view.innerHTML = html;
+  if (S.searchOpen && S.focusSearch){ S.focusSearch = false; const i = document.getElementById('tx-search'); if (i) i.focus(); }
+}
+
+/* stats */
+function renderStats(){
+  ensureSelDay();
+  const me = monthEntries(), exp = me.filter(e=>e.type==='expense'), inc = me.filter(e=>e.type==='income');
+  const spent = sum(exp), income = sum(inc);
+  let html = titleBar('Statistics');
+  html += `<section class="card"><div class="card-head"><h2>${monthLabel(S.month)}</h2>${monthArrows(false)}</div>${calendarHTML()}
+    ${keysHTML([['Spent',C_OUT],['Income',C_IN],['Lent / borrowed','#2BE4F4'],['Due','#FFC75A']])}</section>`;
+  const dl = sortEntries(me.filter(e=>e.date===S.selDay)), dSpent = sum(dl.filter(e=>e.type==='expense'));
+  html += `<section class="section"><div class="section-head"><h2>${esc(dayLabel(S.selDay))}</h2>${dSpent?`<span class="note">Spent <b class="num">${fmt(dSpent)}</b></span>`:''}</div>
+    ${dl.length ? `<div class="list">${dl.map(e=>itemHTML(e,{noDate:true})).join('')}</div>` : `<div class="empty sm"><p>No entries on this day.</p><button class="btn" data-act="open-new" data-date="${S.selDay}">Add an entry for this day</button></div>`}</section>`;
+  html += `<div class="kpis">
+    <div class="kpi inc"><small>Total income</small><span class="num">${CUR} ${fmt(income)}</span><span class="k-foot">${inc.length} entr${inc.length===1?'y':'ies'}</span></div>
+    <div class="kpi exp"><small>Total expenses</small><span class="num">${CUR} ${fmt(spent)}</span><span class="k-foot">${exp.length} entr${exp.length===1?'y':'ies'}</span></div></div>`;
+  const [y,m] = S.month.split('-').map(Number), days = new Date(y,m,0).getDate();
+  let groups, series;
+  if (S.chart==='daily'){
+    groups = Array.from({length:days}, (_,i)=>({label:String(i+1), values:[0], showLabel: i===0 || (i+1)%5===0}));
+    for (const e of exp) groups[+e.date.slice(8)-1].values[0] += Number(e.amount)||0;
+    series = [{name:'Expenses', color:C_OUT}];
+  } else {
+    groups = Array.from({length:Math.ceil(days/7)}, (_,i)=>({label:'Week '+(i+1), values:[0,0]}));
+    for (const e of me){ const w = Math.floor((+e.date.slice(8)-1)/7);
+      if (e.type==='income') groups[w].values[0] += Number(e.amount)||0;
+      if (e.type==='expense') groups[w].values[1] += Number(e.amount)||0; }
+    series = [{name:'Income', color:C_IN}, {name:'Expenses', color:C_OUT}];
+  }
+  html += `<section class="card"><div class="card-head"><h2>Statistics</h2>${segHTML('chart', S.chart, [['weekly','Weekly'],['daily','Daily']])}</div>
+    ${me.length ? barChartSVG(groups, series) + keysHTML(series.map(x=>[x.name,x.color])) : '<p class="note">Nothing recorded this month yet.</p>'}</section>`;
+  const rows = breakdownRows(exp), left = rows.filter((_,i)=>i%2===0), right = rows.filter((_,i)=>i%2===1);
+  const lab = x => `<div><b style="color:${x.color}">${spent?Math.round(x.value/spent*100):0}%</b><span>${esc(x.label)}</span></div>`;
+  html += `<section class="card"><div class="card-head"><h2>Expense breakdown</h2>${segHTML('brk', S.brk, [['category','Category'],['bucket','Bucket']])}</div>
+    ${exp.length ? `<div class="ring-wrap"><div class="ring-col">${left.map(lab).join('')}</div>${donutSVG(rows, spent, 'Expense breakdown')}<div class="ring-col r">${right.map(lab).join('')}</div></div>` : '<p class="note">No spending recorded this month yet.</p>'}</section>`;
+  const kind = S.topKind==='income' ? 'income' : 'expense';
+  const top = me.filter(e=>e.type===kind).sort((a,b)=>(Number(b.amount)||0)-(Number(a.amount)||0)).slice(0,8);
+  html += `<section class="section">${segHTML('top-kind', kind, [['income','Income'],['expense','Expenses']], 'wide')}
+    ${top.length ? `<div class="list">${top.map(e=>itemHTML(e)).join('')}</div>` : `<div class="empty sm"><p>No ${kind==='income'?'income':'expenses'} in ${monthLabel(S.month)}.</p></div>`}</section>`;
   view.innerHTML = html;
 }
+
+/* lent & borrowed */
 function renderOwed(){
   const type = S.side==='receivable' ? 'lent' : 'borrowed';
   const t = owedTotals(type);
@@ -532,7 +803,8 @@ function renderOwed(){
   const f = S.ownStatus;
   const list = all.filter(e=>{ const s = e.status||'pending'; return f==='all' ? true : f==='open' ? s!=='cleared' : s===f; })
     .sort((a,b)=>(b.date||'').localeCompare(a.date||''));
-  let html = `<div class="seg" role="group" aria-label="Side">
+  let html = titleBar('Lent &amp; Borrowed');
+  html += `<div class="seg" role="group" aria-label="Side">
     <button data-act="side" data-v="receivable" aria-pressed="${S.side==='receivable'}">Receivable · they owe you</button>
     <button data-act="side" data-v="payable" aria-pressed="${S.side==='payable'}">Payable · you owe</button></div>`;
   html += `<div class="owed-sum"><div><span class="label">Pending</span><span class="num">${fmt(t.pending)}</span></div>
@@ -544,8 +816,8 @@ function renderOwed(){
       ${all.length?'':`<button class="btn" data-act="open-new" data-type="${type}">Add ${S.side==='receivable'?'money lent':'money borrowed'}</button>`}</div>`;
   } else {
     html += list.map(e=>{ const s = e.status||'pending'; return `<article class="debt">
-      <div class="debt-top"><div><b>${esc(e.person||e.title||'Unnamed')}</b><small>${esc(dayLabel(e.date))}${e.due?` · due ${esc(dayLabel(e.due))}`:''}${e.note?` · ${esc(e.note)}`:''}</small></div>
-      <span class="num" style="color:var(${type==='lent'?'--in':'--out'})">${fmt(e.amount)}</span></div>
+      <div class="debt-top">${icoHTML(entryLook(e))}<div><b>${esc(e.person||e.title||'Unnamed')}</b><small>${esc(dayLabel(e.date))}${e.due?` · due ${esc(dayLabel(e.due))}`:''}${e.note?` · ${esc(e.note)}`:''}</small></div>
+      <span class="num" style="color:${type==='lent'?C_IN:C_OUT}">${fmt(e.amount)}</span></div>
       <div class="stat" role="group" aria-label="Status">${Object.entries(STATUSES).map(([k,v])=>`<button class="s-${k}" data-act="set-status" data-id="${esc(e.id)}" data-v="${k}" aria-pressed="${s===k}">${v}</button>`).join('')}</div>
       <button class="edit-link" data-act="edit" data-id="${esc(e.id)}">Edit details</button></article>`; }).join('');
   }
@@ -553,8 +825,8 @@ function renderOwed(){
   view.innerHTML = html;
 }
 function render(){
-  document.querySelectorAll('.tabs button').forEach(b=>{ if (b.dataset.v===S.tab) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
-  if (S.tab==='home') renderHome(); else if (S.tab==='activity') renderActivity(); else renderOwed();
+  document.querySelectorAll('.tabs button[data-v]').forEach(b=>{ if (b.dataset.v===S.tab) b.setAttribute('aria-current','page'); else b.removeAttribute('aria-current'); });
+  if (S.tab==='home') renderHome(); else if (S.tab==='activity') renderActivity(); else if (S.tab==='stats') renderStats(); else renderOwed();
   if (sheet) renderSheet();
 }
 
@@ -562,13 +834,15 @@ function render(){
 const scrim = document.getElementById('scrim'), sheetEl = document.getElementById('sheet');
 function openSheet(s){ sheet = s; scrim.hidden = false; renderSheet(); setTimeout(()=>{ const f = sheetEl.querySelector('[data-autofocus]'); if (f) f.focus(); }, 40); }
 function closeSheet(){ sheet = null; scrim.hidden = true; sheetEl.innerHTML=''; }
-function blankEntry(type){ return {id:newId(), type:type||'expense', amount:'', date:todayISO(), title:'', category:'', bucket:S.settings.buckets[0]||'', person:'', status:'pending', due:'', note:'', createdAt:Date.now()}; }
+const nowHM = () => { const d = new Date(); return pad(d.getHours())+':'+pad(d.getMinutes()); };
+function blankEntry(type){ return {id:newId(), type:type||'expense', amount:'', date:todayISO(), time:nowHM(), title:'', category:'', bucket:S.settings.buckets[0]||'', person:'', status:'pending', due:'', note:'', createdAt:Date.now()}; }
 function syncForm(){
   if (!sheet || sheet.mode!=='form') return;
   const g = id => sheetEl.querySelector('#'+id);
   const e = sheet.entry;
   if (g('f-amount')) e.amount = g('f-amount').value;
   if (g('f-date')) e.date = g('f-date').value;
+  if (g('f-time')) e.time = g('f-time').value;
   if (g('f-title')) e.title = g('f-title').value;
   if (g('f-person')) e.person = g('f-person').value;
   if (g('f-due')) e.due = g('f-due').value;
@@ -628,7 +902,7 @@ function renderSheet(){
       <div class="field"><span class="label">Status</span><div class="stat" role="group">${Object.entries(STATUSES).map(([k,v])=>`<button type="button" class="s-${k}" data-act="f-status" data-v="${k}" aria-pressed="${(e.status||'pending')===k}">${v}</button>`).join('')}</div></div>`
       :`<div class="field"><label for="f-title">${e.type==='income'?'From':'Paid to'}</label><input class="input" id="f-title" placeholder="Shop, person or description" value="${esc(e.title)}"></div>`}
     <div class="row2"><div class="field"><label for="f-date">Date</label><input class="input" type="date" id="f-date" value="${esc(e.date)}"></div>
-      ${debt?`<div class="field"><label for="f-due">Due by (optional)</label><input class="input" type="date" id="f-due" value="${esc(e.due||'')}"></div>`:'<div></div>'}</div>
+      ${debt?`<div class="field"><label for="f-due">Due by (optional)</label><input class="input" type="date" id="f-due" value="${esc(e.due||'')}"></div>`:`<div class="field"><label for="f-time">Time</label><input class="input" type="time" id="f-time" value="${esc(e.time||'')}"></div>`}</div>
     ${debt?'':`<div class="field"><span class="label">Category</span>${chipRow(cats,e.category,'cat','cat')}</div>`}
     <div class="field"><span class="label">Bucket</span>${chipRow(bks,e.bucket,'bucket','bucket')}</div>
     <div class="field"><label for="f-note">Note</label><input class="input" id="f-note" placeholder="Optional" value="${esc(e.note)}"></div>
@@ -641,7 +915,7 @@ function startFromSms(text){
   const p = parseSms(text);
   if (!p.amount){ openSheet({mode:'paste', sms:text, err:"No amount found in that message. Check you pasted the full SMS, or add the entry with +."}); return; }
   const e = blankEntry(p.type||'expense');
-  Object.assign(e, {amount: Number(p.amount).toFixed(3), date: p.date||todayISO(), title: p.merchant, category: p.category, source:'sms', sms:text.slice(0,600)});
+  Object.assign(e, {amount: Number(p.amount).toFixed(3), date: p.date||todayISO(), time: p.time||e.time, title: p.merchant, category: p.category, source:'sms', sms:text.slice(0,600)});
   let hint = '', known = null;
   if (p.iban){
     e.iban = p.iban; known = S.settings.payees[p.iban];
@@ -664,14 +938,20 @@ document.addEventListener('click', ev=>{
   if (sheet && sheet.mode==='form' && sheetEl.contains(b)) syncForm();
   switch(a){
     case 'tab': S.tab = v; window.scrollTo(0,0); render(); break;
-    case 'month': { const [y,m] = S.month.split('-').map(Number); const d = new Date(y, m-1+Number(v), 1); S.month = d.getFullYear()+'-'+pad(d.getMonth()+1); render(); break; }
+    case 'month': { const [y,m] = S.month.split('-').map(Number); const d = new Date(y, m-1+Number(v), 1); S.month = d.getFullYear()+'-'+pad(d.getMonth()+1); S.selDay = null; render(); break; }
+    case 'cal-day': S.selDay = v; render(); break;
+    case 'brk': S.brk = v; render(); break;
+    case 'chart': S.chart = v; render(); break;
+    case 'top-kind': S.topKind = v; render(); break;
+    case 'toggle-search': S.searchOpen = !S.searchOpen; if (!S.searchOpen) S.search = ''; else S.focusSearch = true; render(); break;
+    case 'bell': { const c = document.getElementById('due-card'); if (c){ c.scrollIntoView({behavior:'smooth', block:'center'}); } else toast('Nothing due today or tomorrow'); break; }
     case 'goto-owed': S.tab='owed'; S.side=v; S.ownStatus='open'; render(); break;
     case 'side': S.side=v; render(); break;
     case 'own-status': S.ownStatus=v; render(); break;
     case 'act-filter': S.actFilter=v; render(); break;
     case 'set-status': { const e = S.entries.find(x=>x.id===b.dataset.id); if (e && e.status!==v){ saveEntry({...e, status:v}); toast('Marked '+STATUSES[v].toLowerCase()); } break; }
     case 'open-paste': openSheet({mode:'paste', sms:''}); break;
-    case 'open-new': openSheet({mode:'form', isNew:true, entry:blankEntry(b.dataset.type)}); break;
+    case 'open-new': { const ne = blankEntry(b.dataset.type); if (b.dataset.date) ne.date = b.dataset.date; openSheet({mode:'form', isNew:true, entry:ne}); break; }
     case 'open-lists': remindersState().then(st=>{ S.remState = st; try{ S.bgSync = localStorage.getItem('dinar-bg-sync')==='1'; }catch(e){} if (sheet && sheet.mode==='lists') renderSheet(); }); openSheet({mode:'lists'}); break;
     case 'sample': startFromSms(SAMPLE_SMS); break;
     case 'read-sms': startFromSms(sheetEl.querySelector('#f-sms').value); break;
@@ -743,6 +1023,13 @@ document.addEventListener('change', ev=>{
   r.readAsText(f); ev.target.value='';
 });
 document.addEventListener('change', ev=>{ if (ev.target.id==='f-due' && sheet && sheet.mode==='form'){ syncForm(); renderSheet(); } });
+document.addEventListener('change', ev=>{
+  if (ev.target.id==='f-cat'){ S.catFilter = ev.target.value; render(); }
+  if (ev.target.id==='f-type'){ S.actFilter = ev.target.value; render(); }
+});
+document.addEventListener('input', ev=>{
+  if (ev.target.id==='tx-search'){ S.search = ev.target.value; const l = document.getElementById('tx-list'); if (l) l.innerHTML = txListHTML(); }
+});
 document.addEventListener('keydown', ev=>{
   if (ev.key==='Escape' && sheet) closeSheet();
   if (ev.key==='Enter' && ev.target.id==='avail-in') ev.target.blur();
